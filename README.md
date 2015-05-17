@@ -18,6 +18,7 @@ sms是短消息的意思，这部分主要讲的是如何使用nodejs完成sms�
 - 发送短信息
 - 6位不同的码（大部分都是）
 - 多长时间发一次
+- 如果同时并发非常高怎么办？
 - 提供http接口，便于访问（express封装一下就可以，不必要讲）
 
 ## node发短信息
@@ -118,6 +119,19 @@ module.exports = app;
 
 最简单也是最好的办法是利用redis的expire命令
 
+http://redis.io/commands/expire
+
+
+expire命令的原理是在redis里设置key的是value，从设置开始，xx秒之后，这个key就会被删除掉
+
+这样做的好处：
+
+- redis是内存数据库非常快
+- key过期删除，非常节省
+
+
+实现如下：
+
 ```
 var redis = require('redis')
     , client = redis.createClient();
@@ -187,11 +201,20 @@ router.get('/request_verify_token', function(req, res) {
 
 - cache_expire是设置redis的key
 - request_verify_token是检测缓存里是否有tel的key，如果有就什么也不做，如果没有就发送短信
+- 如果需要保存发送历史记录，可以日志，也可以库表保存
 
 其他逻辑和这个类似，自己实现。
 
+## 如果同时并发非常高怎么办？
+
+业务系统和sms系统是分开的，如果并发非常高
+
+1. sms部分做好集群，比如pm2
+2. 使用mq（见 [Nodejs消息队列](http://mp.weixin.qq.com/s?__biz=MzAxMTU0NTc4Nw==&mid=222389072&idx=1&sn=c0baf99bda2c74aa8b4fd0e2a2b14096#rd)）
 
 全文完
+
+欢迎提问，欢迎分享
 
 欢迎关注我的公众号【node全栈】  ![](node全栈-公众号.png)
 
